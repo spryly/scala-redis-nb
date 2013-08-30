@@ -21,7 +21,7 @@ object StringCommands {
   case object NX extends SetConditionOption("NX")
   case object XX extends SetConditionOption("XX")
 
-  case class Set(key: String, value: Stringified,
+  case class Set(key: Stringified, value: Stringified,
                  exORpx: Option[SetExpiryOption] = None,
                  nxORxx: Option[SetConditionOption] = None) extends RedisCommand[Boolean]("SET") {
 
@@ -30,52 +30,53 @@ object StringCommands {
 
   object Set {
 
-    def apply(key: String, value: Stringified, setOption: SetOption): Set =
+    def apply(key: Stringified, value: Stringified, setOption: SetOption): Set =
       setOption match {
         case e: SetExpiryOption => Set(key, value, exORpx = Some(e))
         case c: SetConditionOption => Set(key, value, nxORxx = Some(c))
       }
 
-    def apply(key: String, value: Stringified, exORpx: SetExpiryOption, nxORxx: SetConditionOption): Set =
+    def apply(key: Stringified, value: Stringified, exORpx: SetExpiryOption, nxORxx: SetConditionOption): Set =
       Set(key, value, Some(exORpx), Some(nxORxx))
   }
 
 
-  case class GetSet[A: Reader](key: String, value: Stringified) extends RedisCommand[Option[A]]("GETSET") {
+  case class GetSet[A: Reader](key: Stringified, value: Stringified) extends RedisCommand[Option[A]]("GETSET") {
     def params = key +: value +: ANil
   }
   
-  case class SetNx(key: String, value: Stringified) extends RedisCommand[Boolean]("SETNX") {
+  case class SetNx(key: Stringified, value: Stringified) extends RedisCommand[Boolean]("SETNX") {
     def params = key +: value +: ANil
   }
   
-  case class SetEx(key: String, expiry: Long, value: Stringified) extends RedisCommand[Boolean]("SETEX") {
+  case class SetEx(key: Stringified, expiry: Long, value: Stringified) extends RedisCommand[Boolean]("SETEX") {
     def params = key +: expiry +: value +: ANil
   }
   
-  case class PSetEx(key: String, expiryInMillis: Long, value: Stringified) extends RedisCommand[Boolean]("PSETEX") {
+  case class PSetEx(key: Stringified, expiryInMillis: Long, value: Stringified) extends RedisCommand[Boolean]("PSETEX") {
     def params = key +: expiryInMillis +: value +: ANil
   }
 
   
-  case class Incr(key: String) extends RedisCommand[Long]("INCR") {
+  case class Incr(key: Stringified) extends RedisCommand[Long]("INCR") {
     def params = key +: ANil
   }
 
-  case class IncrBy(key: String, amount: Int) extends RedisCommand[Long]("INCRBY") {
+  case class IncrBy(key: Stringified, amount: Int) extends RedisCommand[Long]("INCRBY") {
     def params = key +: amount +: ANil
   }
 
 
-  case class Decr(key: String) extends RedisCommand[Long]("DECR") {
+  case class Decr(key: Stringified) extends RedisCommand[Long]("DECR") {
     def params = key +: ANil
   }
 
-  case class DecrBy(key: String, amount: Int) extends RedisCommand[Long]("DECRBY") {
+  case class DecrBy(key: Stringified, amount: Int) extends RedisCommand[Long]("DECRBY") {
     def params = key +: amount +: ANil
   }
 
 
+  // TODO: String --> Stringified for keys
   case class MGet[A: Reader](keys: Seq[String])
       extends RedisCommand[Map[String, A]]("MGET")(PartialDeserializer.keyedMapPD(keys)) {
     require(keys.nonEmpty)
@@ -95,42 +96,42 @@ object StringCommands {
     def params = kvs.foldRight(ANil) { case (KeyValuePair(k, v), l) => k +: v +: l }
   }
   
-  case class SetRange(key: String, offset: Int, value: Stringified) extends RedisCommand[Long]("SETRANGE") {
+  case class SetRange(key: Stringified, offset: Int, value: Stringified) extends RedisCommand[Long]("SETRANGE") {
     def params = key +: offset +: value +: ANil
   }
 
-  case class GetRange[A: Reader](key: String, start: Int, end: Int) extends RedisCommand[Option[A]]("GETRANGE") {
+  case class GetRange[A: Reader](key: Stringified, start: Int, end: Int) extends RedisCommand[Option[A]]("GETRANGE") {
     def params = key +: start +: end +: ANil
   }
   
-  case class Strlen(key: String) extends RedisCommand[Long]("STRLEN") {
+  case class Strlen(key: Stringified) extends RedisCommand[Long]("STRLEN") {
     def params = key +: ANil
   }
   
-  case class Append(key: String, value: Stringified) extends RedisCommand[Long]("APPEND") {
+  case class Append(key: Stringified, value: Stringified) extends RedisCommand[Long]("APPEND") {
     def params = key +: value +: ANil
   }
   
-  case class GetBit(key: String, offset: Int) extends RedisCommand[Boolean]("GETBIT") {
+  case class GetBit(key: Stringified, offset: Int) extends RedisCommand[Boolean]("GETBIT") {
     def params = key +: offset +: ANil
   }
   
-  case class SetBit(key: String, offset: Int, value: Boolean) extends RedisCommand[Long]("SETBIT") {
+  case class SetBit(key: Stringified, offset: Int, value: Boolean) extends RedisCommand[Long]("SETBIT") {
     def params = key +: offset +: (if (value) "1" else "0") +: ANil
   }
 
 
-  case class BitOp(op: String, destKey: String, srcKeys: Seq[String]) extends RedisCommand[Long]("BITOP") {
+  case class BitOp(op: String, destKey: Stringified, srcKeys: Seq[Stringified]) extends RedisCommand[Long]("BITOP") {
     require(srcKeys.nonEmpty)
     def params = op +: destKey +: srcKeys.toArgs
   }
 
   object BitOp {
-    def apply(op: String, destKey: String, srcKey: String, srcKeys: String*): BitOp = BitOp(op, destKey, srcKey +: srcKeys)
+    def apply(op: String, destKey: Stringified, srcKey: Stringified, srcKeys: Stringified*): BitOp = BitOp(op, destKey, srcKey +: srcKeys)
   }
 
 
-  case class BitCount(key: String, range: Option[(Int, Int)]) extends RedisCommand[Long]("BITCOUNT") {
+  case class BitCount(key: Stringified, range: Option[(Int, Int)]) extends RedisCommand[Long]("BITCOUNT") {
     def params = key +: range.fold(ANil) { case (from, to) => from +: to +: ANil }
   }
 }

@@ -22,25 +22,25 @@ object Stringified {
 }
 
 
-class KeyValuePair(val pair: Product2[String, Stringified]) extends AnyVal {
-  def key: String       = pair._1
+class KeyValuePair(val pair: Product2[Stringified, Stringified]) extends AnyVal {
+  def key: Stringified       = pair._1
   def value: Stringified = pair._2
 }
 
 object KeyValuePair {
   import Stringified._
 
-  implicit def apply(pair: Product2[String, Stringified]): KeyValuePair =
+  implicit def apply(pair: Product2[Stringified, Stringified]): KeyValuePair =
     new KeyValuePair(pair)
 
-  implicit def apply[A: Writer](pair: Product2[String, A]): KeyValuePair =
-    new KeyValuePair((pair._1, pair._2.stringify))
+  implicit def apply[A: Writer, B: Writer](pair: Product2[A, B]): KeyValuePair =
+    new KeyValuePair((pair._1.stringify, pair._2.stringify))
 
-  implicit def applySeq[A: Writer](pairs: Seq[Product2[String, A]]): Seq[KeyValuePair] =
-    pairs.map(apply[A])
+  implicit def applySeq[A: Writer, B: Writer](pairs: Seq[Product2[A, B]]): Seq[KeyValuePair] =
+    pairs.map(apply[A, B])
 
-  implicit def applyIterable[A: Writer](pairs: Iterable[Product2[String, A]]): Iterable[KeyValuePair] =
-    pairs.map(apply[A])
+  implicit def applyIterable[A: Writer, B: Writer](pairs: Iterable[Product2[A, B]]): Iterable[KeyValuePair] =
+    pairs.map(apply[A, B])
 
   def unapply(kvp: KeyValuePair) = Some(kvp.pair)
 }
